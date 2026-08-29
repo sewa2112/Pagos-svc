@@ -63,3 +63,12 @@ docker compose up --build
 mvn test      # unit tests + Cucumber
 mvn verify    # + verificación de cobertura JaCoCo (100% LINE, falla si baja)
 ```
+## Elección y Justificación de ramificación
+
+Como equipo hemos decidido implementar la estrategia GitFlow, siendo concientes de que en casos como estos desarrollos "pequeños y de cortos periodos de desarrollo para arreglos y funciones" sería teoricamente correcto usar Trunk-Based, pero existen 2 factores que marcaron el camino a la elección. 
+
+En primer lugar está la experiencia previa al usar GitFlow, desde nuestros primeros proyectos en conjunto, lo hicimos usando esta estrategia, pero no solo porque nos lo enseñó nuestro profe, sino porque facilita y hace el desarrollo en conjunto más seguro. 
+
+El segundo punto sería que precisamente por las dimenciones del proyecto y del equipo de desarrollo, se mitigan las principales carencias de la estrategia, como lo serían la alta dificultad al gestionar las ramas y los conflictos de fusión masivos con las ramas feature demasiado longevas.
+
+Para dar conclusión a este apartado sintetizaremos la respuesta a que de tratarse de un proyecto serio y de tener un personal más abundante, la respuesta sería escojer Trunk-based, la cual favorece el desarrollo y entrega de feedback de manera agil. Pero en nuestro caso es más bien lo contrario, teniendo un equipo de solo 2 personas y un proyecto pequeño, por lo que nos resulta optimo usar GitFlow para el searrollo de este proyecto.
