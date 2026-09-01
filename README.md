@@ -72,3 +72,26 @@ En primer lugar está la experiencia previa al usar GitFlow, desde nuestros prim
 El segundo punto sería que precisamente por las dimenciones del proyecto y del equipo de desarrollo, se mitigan las principales carencias de la estrategia, como lo serían la alta dificultad al gestionar las ramas y los conflictos de fusión masivos con las ramas feature demasiado longevas.
 
 Para dar conclusión a este apartado sintetizaremos la respuesta a que de tratarse de un proyecto serio y de tener un personal más abundante, la respuesta sería escojer Trunk-based, la cual favorece el desarrollo y entrega de feedback de manera agil. Pero en nuestro caso es más bien lo contrario, teniendo un equipo de solo 2 personas y un proyecto pequeño, por lo que nos resulta optimo usar GitFlow para el searrollo de este proyecto.
+
+# Convenciones y Buenas Prácticas del Proyecto
+
+## 1. Flujo de Trabajo (Git Workflow)
+* **`main`:** Código principal o mejor conocido como ""producción"". Solo puede mezclarsen con las ramas  `develop` y o `hotfix/`.
+* **`develop`:** Rama de desarrollo para integrar nuevas funciones o cambios de la rama main para la próxima versión.
+* **Nomenclatura de ramas:**
+  * `feature/ID-descripcion` (ej. `feature/JIRA-123-login`)
+  * `bugfix/ID-descripcion`
+  * `hotfix/ID-descripcion`
+
+## 2. Convenciones de Commits
+Seguimos el estándar de Conventional Commits:
+* `feat:` Nueva función funcionalidades.
+* `fix:` Correción del código.
+* `docs:` Cambios o adiciones de la documentación.
+* `chore:` Todo lo que tenga que ver con el mantenimiento del código y en nuestro caso para agrtegar el workflow del hola mundo.
+
+
+## 3. Proceso de Revisión de Código y Pull Requests
+* Ningún desarrollador debe hacer push directo a `develop` o `main`.
+* Todo PR requiere al menos 1 revisor asignado.
+* Eliminar la rama temporal inmediatamente después del merge.
