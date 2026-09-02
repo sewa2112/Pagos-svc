@@ -1,0 +1,25 @@
+@startuml C4-2-Contenedores
+!include <C4/C4_Container>
+
+title ms-pagos — C4 Nivel 2: Contenedores
+
+LAYOUT_WITH_LEGEND()
+
+System_Boundary(sb, "ms-pagos (dominio de Pagos)") {
+  Container(api, "API de Pagos", "Spring Boot 3 · Java 21 · ECS Fargate", "Expone /api/pagos y persiste el dominio con su propia base de datos")
+  ContainerDb(db, "BD financiera", "Aurora Serverless (PostgreSQL)", "Cobros, reembolsos y trail (propia del dominio)")
+  ContainerQueue(q, "Cola de cobros", "Amazon SQS + DLQ", "Cobros encolados con reintentos")
+}
+
+Container(apigw, "API Gateway", "Amazon API Gateway", "JWT + throttling")
+Container_Ext(gw, "Pasarela de pagos", "Webpay / Stripe", "Autoriza cobros y confirma por webhook firmado")
+Container(ev, "Amazon EventBridge", "Servicio AWS", "pago.confirmado / pago.rechazado")
+
+Rel(apigw, api, "Enruta /api/pagos", "REST")
+Rel(api, q, "Encola el cobro", "AWS SDK")
+Rel(api, db, "Persiste la operación financiera", "JPA / SQL (TLS)")
+Rel(api, gw, "Autoriza el cobro (tokenizado)", "API REST (Circuit Breaker)")
+Rel(api, ev, "Publica el resultado", "AWS SDK")
+
+SHOW_LEGEND()
+@enduml

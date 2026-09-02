@@ -1,0 +1,28 @@
+@startuml C4-3-Componentes
+!include <C4/C4_Component>
+
+title ms-pagos — C4 Nivel 3: Componentes internos
+
+LAYOUT_WITH_LEGEND()
+
+Container_Boundary(ms, "ms-pagos — Spring Boot 3 (ECS Fargate)") {
+
+  Component(rest, "PagoController", "Spring MVC REST", "Expone /api/pagos: crear, consultar, actualizar y eliminar")
+  Component(svc, "PagoService", "Java 21", "Lógica de negocio del dominio: validaciones, reglas y transiciones")
+  Component(idem, "IdempotenciaService", "Java 21 + Aurora", "Clave de idempotencia: nunca procesa dos veces la misma operación")
+  Component(gw, "PasarelaClient", "RestClient + Resilience4j", "Cobra contra la pasarela con Circuit Breaker y reintentos")
+  ComponentDb(repo, "PagoRepository", "Spring Data JPA", "Persistencia financiera con trail")
+  Component(pub, "PublicadorEventos", "AWS SDK (EventBridge)", "Publica pago.confirmado / pago.rechazado")
+}
+
+Container(apigw, "API Gateway", "Amazon API Gateway", "JWT + throttling")
+
+Rel(apigw, rest, "Enruta /api/pagos", "REST")
+Rel(rest, svc, "Delega el cobro")
+Rel(svc, idem, "Verifica/registra la clave", "SQL")
+Rel(svc, gw, "Autoriza el cobro", "REST (Circuit Breaker)")
+Rel(svc, repo, "Persiste la operación financiera", "JPA / SQL")
+Rel(svc, pub, "Publica el resultado", "AWS SDK")
+
+SHOW_LEGEND()
+@enduml
