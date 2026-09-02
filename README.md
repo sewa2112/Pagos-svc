@@ -95,3 +95,17 @@ Seguimos el estándar de Conventional Commits:
 * Ningún desarrollador debe hacer push directo a `develop` o `main`.
 * Todo PR requiere al menos 1 revisor asignado.
 * Eliminar la rama temporal inmediatamente después del merge.
+
+## 4. Uso de IA
+
+Como equipo usamos la inteligencia artificial "Gemini", se usó con fines meramente de soporte, los cuales fueron:
+
+* Correción de errores de sintaxis (en el workflow especificamente, lo copié y pegué de la guía y me salía error, sorry profe).
+
+* Traducción de los errores (va relacionado con el primer punto)
+
+## Reflexiones finales
+
+* Sebastián Osorio: Con esta primera entrega, en lo personal me deja con una sensación de satisfacción y optimismo, principalmente porque aprender las buenas prácticas de git, el uso correcto de las ramas y el uso de los pull request me significa una herramienta fundamental en mi repertyorio para usarlo en el futuro cercano, afectando positivamente en mis futuros proyectos y en concecuencia, en la relación y convivencia con mis futuros compañeros de trabajo y mi carrera profecional.
+
+* Vicente Monsalves: el proyecto esta siendo interesante ya que pone a prueba lo que eh aprendido en herramientas devops  y eso representa un desafio grande al ser un nuevo proyecto, ya que pondra a prueba que tan bien soy capaz de ejecutar la consola de codigos y github de una manera bastante distinta y mas compleja a lo que anteriormente estoy acostumbrado.
