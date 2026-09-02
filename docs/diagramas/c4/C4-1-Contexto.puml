@@ -1,0 +1,21 @@
+@startuml C4-1-Contexto
+!include <C4/C4_Context>
+
+title ms-pagos — C4 Nivel 1: Contexto
+
+LAYOUT_WITH_LEGEND()
+
+System(sys, "ms-pagos", "Pagos del caso caso06: procesa cobros y reembolsos contra la pasarela de pagos, mantiene la trazabilidad financiera y garantiza que ninguna operación se cobre ni pierda dos veces")
+
+System_Ext(core, "ms-reservas", "Reservas del caso (servicio central)")
+System_Ext(notif, "ms-notificaciones", "Notificaciones del caso")
+System_Ext(cognito, "Amazon Cognito", "Autenticación y JWT por rol")
+System_Ext(bus, "Amazon EventBridge", "Bus de eventos de dominio")
+
+Rel(sys, core, "Reservas del caso (servicio central)", "REST / eventos")
+Rel_Back(notif, sys, "Notificaciones del caso", "EventBridge / SQS")
+Rel_Back(cognito, sys, "Autenticación y JWT por rol", "JWT")
+Rel(sys, bus, "Bus de eventos de dominio", "AWS SDK")
+
+SHOW_LEGEND()
+@enduml

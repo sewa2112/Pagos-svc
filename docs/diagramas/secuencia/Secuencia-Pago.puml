@@ -1,0 +1,48 @@
+@startuml Secuencia-Pago
+title ms-pagos — Diagrama de secuencia: cobro idempotente
+
+skinparam responseMessageBelowArrow true
+skinparam maxMessageSize 320
+skinparam sequenceMessageAlignment center
+skinparam roundCorner 8
+autonumber "<b>0."
+
+participant "Servicio origen" as core #D5E8D4
+participant "API Gateway" as gw #DAE8FC
+box "ms-pagos" #FFF2CC
+  participant "PagoController" as rest
+  participant "PagoService" as svc
+  participant "IdempotenciaService" as idem
+  participant "PasarelaClient (CB)" as gwc
+  participant "Repository" as repo
+end box
+participant "Pasarela de pagos" as pay #E1D5E7
+participant "SQS" as sqs #F8CECC
+
+== Cobro idempotente ==
+core -> gw : POST /api/pagos (operación + monto + clave de idempotencia)
+gw -> rest : valida JWT y enruta
+rest -> svc : cobrar(pago)
+svc -> idem : ¿ya se procesó esta clave?
+idem --> svc : NO (primera vez)
+svc -> gwc : autoriza el cobro (token)
+gwc -> pay : POST /charge (Circuit Breaker)
+pay --> gwc : 201 aprobado
+svc -> repo : persiste la operación financiera (trail)
+svc -> sqs : publica pago.confirmado
+rest --> core : 201 Created
+
+== Reintento duplicado (idempotencia) ==
+core -> gw : POST /api/pagos (MISMA clave, reintento)
+rest -> svc : cobrar(pago)
+svc -> idem : ¿ya se procesó esta clave?
+idem --> svc : SÍ (ya cobrado)
+rest --> core : 200 OK (mismo resultado, sin cobrar dos veces)
+note over idem, pay
+  <b>Idempotencia (RNF de consistencia)</b>
+  La clave de idempotencia garantiza que un reintento
+  nunca produce un segundo cobro: requisito crítico
+  de las operaciones financieras del caso.
+end note
+
+@enduml
