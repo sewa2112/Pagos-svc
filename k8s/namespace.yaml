@@ -5,3 +5,4 @@ metadata:
   labels:
     app.kubernetes.io/name: pagos-svc
     app.kubernetes.io/part-of: viaja-mejor
+
