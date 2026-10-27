@@ -70,8 +70,18 @@ jobs:
       - name: Descargar código fuente
         uses: actions/checkout@v4
 
+      - name: Configurar JDK 21 (Temurin) con caché Maven
+        uses: actions/setup-java@v4
+        with:
+          java-version: '21'
+          distribution: 'temurin'
+          cache: 'maven'
+
+      - name: Pre-cargar dependencias en caché local (~/.m2)
+        run: mvn -B dependency:go-offline
+
       # Escaneo de dependencias Maven con Snyk (si existe el token configurado)
-      - name: Análisis de dependencias Maven con Snyk
+      - name: Análisis de dependencias Maven con Snyk (Quality Gate)
         if: ${{ env.SNYK_TOKEN != '' }}
         uses: snyk/actions/maven@master
         with:
@@ -81,10 +91,12 @@ jobs:
       - name: Aviso de configuración de Snyk
         if: ${{ env.SNYK_TOKEN == '' }}
         run: |
-          echo "⚠️ Variable SNYK_TOKEN no detectada en GitHub Secrets. Se procede con el escáner de seguridad Trivy."
+          echo "ℹ️ Variable SNYK_TOKEN no detectada en GitHub Secrets. Se procede con el escáner de seguridad Trivy."
 
-      # Escaneo de vulnerabilidades con Aquasecurity Trivy (Bloqueo automático ante HIGH / CRITICAL)
+      # Escaneo de vulnerabilidades con Aquasecurity Trivy (Quality Gate Bloqueante)
+      # Al tener pre-cargado ~/.m2, Trivy resuelve dependencias localmente sin peticiones remotas que causen error 429
       - name: Escaneo de código y dependencias con Trivy (Quality Gate Bloqueante)
+        if: ${{ env.SNYK_TOKEN == '' }}
         uses: aquasecurity/trivy-action@master
         with:
           scan-type: 'fs'
