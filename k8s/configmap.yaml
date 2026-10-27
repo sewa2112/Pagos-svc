@@ -8,3 +8,4 @@ metadata:
 data:
   PORT: "8080"
   SPRING_PROFILES_ACTIVE: "prod"
+

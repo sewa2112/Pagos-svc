@@ -44,3 +44,4 @@ updates:
       - "security"
     commit-message:
       prefix: "chore(ci)"
+
