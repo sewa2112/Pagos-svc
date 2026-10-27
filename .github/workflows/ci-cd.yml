@@ -128,7 +128,7 @@ jobs:
           echo "image_latest=$IMAGE_NAME:latest" >> $GITHUB_OUTPUT
 
       - name: Construir imagen Docker con optimizaciones de seguridad (Multi-stage + Alpine + Non-Root)
-        uses: docker/build-push-action@v5
+        uses: docker/build-push-action@v7
         with:
           context: .
           file: ./Dockerfile
