@@ -238,7 +238,7 @@ jobs:
           echo "--- Smoke Test 3: POST /api/pagos (Creación de recurso) ---"
           HTTP_POST=$(curl -s -o /dev/null -w "%{http_code}" -X POST http://localhost:8080/api/pagos \
             -H 'Content-Type: application/json' \
-            -d '{"monto": 25000, "metodoPago": "TARJETA_CREDITO", "estado": "APROBADO"}')
+            -d '{"nombre": "Pago Reserva Viaje", "reserva": "RES-1001", "monto": 25000}')
           echo "HTTP Status POST /api/pagos: $HTTP_POST"
           if [ "$HTTP_POST" -ne 201 ]; then
             echo "❌ Error: Creación de pago falló (esperado HTTP 201, recibido $HTTP_POST)"
