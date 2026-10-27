@@ -3,3 +3,8 @@ target/
 .idea/
 .vscode/
 *.iml
+.git/
+.github/
+*.md
+docs/
+k8s/
