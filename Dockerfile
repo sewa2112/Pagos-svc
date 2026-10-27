@@ -16,7 +16,7 @@ RUN mvn -B -q clean package -DskipTests
 # =========================================================
 # Etapa 2: Imagen final de ejecución (Runtime JRE 21 Alpine)
 # =========================================================
-FROM eclipse-temurin:21-jre-alpine AS runtime
+FROM eclipse-temurin:25-jre-alpine AS runtime
 WORKDIR /app
 
 # Parámetro de seguridad y gobernanza (IE1 / IE3): Usuario sin privilegios root
