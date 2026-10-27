@@ -1,68 +1,160 @@
 # Pagos — Microservicio de riesgo pagos
 
-Microservicio correspondiente al **caso caso06 — ViajaMejor** (Reservas de viajes) de la Evaluación Parcial N°1.
+Microservicio correspondiente al **caso caso06 — ViajaMejor** (Reservas de viajes) para la asignatura **Ingeniería DevOps (DOY0101)** — Duoc UC.
 
-| | |
+| Dimensión | Detalle |
 |---|---|
-| Asignatura | JVY0101 — Java: Diseño y Construcción de Soluciones Nativas en Nube |
-| Stack | Spring Boot 3.3 · Java 21 · Maven · Spring Data JPA · H2 · springdoc-openapi |
-| Calidad | JaCoCo cobertura LINE 100% · Cucumber (BDD) alineado a endpoints REST |
-| Entrega | Docker / Docker Compose |
+| **Asignatura** | DOY0101 — Ingeniería DevOps (Evaluación Parcial N°2) |
+| **Ponderación** | 45% |
+| **Stack** | Spring Boot 3.3.5 · Java 21 · Maven · Spring Data JPA · H2 · springdoc-openapi |
+| **Calidad** | JaCoCo cobertura LINE 100% · Pruebas unitarias JUnit 5 · Cucumber BDD |
+| **Seguridad** | Dependabot · Snyk · Aquasecurity Trivy (Quality Gate bloqueante) |
+| **Contenedores** | Dockerfile Multi-stage · Alpine Linux JRE 21 · Usuario no-root |
+| **Orquestación** | Docker Compose (límites y healthcheck) · Kubernetes (Deployment, Service, HPA) |
+| **CI/CD** | GitHub Actions (`.github/workflows/ci-cd.yml`) con despliegue simulado y trazabilidad |
+
+---
 
 ## Responsabilidad (SRP)
 
-administra los datos y la lógica del dominio de Pagos del caso caso06 (ViajaMejor). Su base de datos es una **H2 en memoria** (un solo microservicio por base), cumpliendo aislamiento de datos por dominio.
+Administra los datos y la lógica del dominio de Pagos del caso **caso06 (ViajaMejor)**. Su base de datos es una **H2 en memoria** (un microservicio por base), cumpliendo aislamiento de datos por dominio.
 
 ## Página de presentación
 
 Al ejecutar el servicio, `http://localhost:8080/` muestra la página de presentación del microservicio con documentación y enlaces a:
 
 - **Swagger UI**: `/swagger-ui/index.html`
-- **OpenAPI (yaml)**: `/v3/api-docs.yaml`
+- **OpenAPI (json/yaml)**: `/v3/api-docs` / `/v3/api-docs.yaml`
 - **ReDoc**: `/redoc.html`
 - **H2 Console**: `/h2-console`
 
-## Endpoints
+## Endpoints REST
 
 | Método | Ruta | Descripción |
-|--------|------|-------------|
-| GET | `/api/pagos` | Lista todos los recursos |
-| GET | `/api/pagos/{id}` | Obtiene un recurso por id |
-| POST | `/api/pagos` | Crea un recurso |
-| PUT | `/api/pagos/{id}` | Actualiza un recurso |
-| DELETE | `/api/pagos/{id}` | Elimina un recurso |
+|---|---|---|
+| `GET` | `/api/pagos` | Lista todos los pagos registrados |
+| `GET` | `/api/pagos/{id}` | Obtiene un pago específico por ID |
+| `POST` | `/api/pagos` | Registra un nuevo pago |
+| `PUT` | `/api/pagos/{id}` | Actualiza un pago existente |
+| `DELETE` | `/api/pagos/{id}` | Elimina un pago por ID |
+
+---
 
 ## Documentación del proyecto
 
-La documentación completa está en la carpeta [`docs/`](docs/):
+La documentación completa se ubica en la carpeta [`docs/`](docs/):
 
-- [`docs/00_Resumen.md`](docs/00_Resumen.md) — propósito, responsabilidad y tecnologías
-- [`docs/01_Arquitectura.md`](docs/01_Arquitectura.md) — componentes, arquitectura y patrones
-- [`docs/02_API.md`](docs/02_API.md) — contrato REST y ejemplos curl
-- [`docs/03_Pruebas.md`](docs/03_Pruebas.md) — tests unitarios, cobertura y Cucumber
-- [`docs/04_Despliegue.md`](docs/04_Despliegue.md)
-- [`docs/05_Justificacion.md`](docs/05_Justificacion.md) — justificación del servicio: RF/RNF/seguridad cubiertos, stack y por qué cada tecnología AWS
-- [`docs/diagramas/`](docs/diagramas/) — C4 (contexto, contenedores, componentes), secuencia e infraestructura AWS — Docker, Docker Compose e integración
+- [`docs/00_Resumen.md`](docs/00_Resumen.md) — Propósito, responsabilidad y tecnologías.
+- [`docs/01_Arquitectura.md`](docs/01_Arquitectura.md) — Componentes, arquitectura y patrones.
+- [`docs/02_API.md`](docs/02_API.md) — Contrato REST y ejemplos curl.
+- [`docs/03_Pruebas.md`](docs/03_Pruebas.md) — Pruebas unitarias, cobertura JaCoCo 100% y Cucumber.
+- [`docs/04_Despliegue.md`](docs/04_Despliegue.md) — Estrategias de contenerización, orquestación (Compose / K8s) y CD.
+- [`docs/05_Justificacion.md`](docs/05_Justificacion.md) — Justificación técnica y arquitectura cloud.
+- [`docs/diagramas/`](docs/diagramas/) — C4, diagramas de secuencia e infraestructura.
 
-## Cómo ejecutar locmente
+---
+
+# Pipeline CI/CD en GitHub Actions (Evaluación Parcial N°2)
+
+El pipeline de integración y entrega continua se implementa en [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) y automatiza el ciclo de vida completo del microservicio garantizando **calidad, seguridad, gobernanza y trazabilidad**.
+
+```mermaid
+flowchart LR
+    A["Push / PR\n(main, develop)"] --> B["Etapa 1: Calidad (IE2)\nJUnit 5 + Cucumber\nJaCoCo (100% Cobertura)"]
+    B --> C["Etapa 2: Seguridad (IE3)\nSnyk (SCA)\nTrivy (SAST/Bloqueo)"]
+    C --> D["Etapa 3: Empaquetado (IE1)\nBuildx Multi-Stage\nAlpine + Non-Root\nTrivy Container Scan"]
+    D --> E["Etapa 4: Despliegue Simulado (IE4 & IE5)\nDocker Compose Up\nHealthcheck Loop\nSmoke Tests HTTP 200/201\nValidación K8s Dry-Run\nMatriz de Trazabilidad"]
+```
+
+### 1. Etapa de Pruebas Automatizadas y Cobertura (`test-and-coverage`) — IE2
+- **Frameworks:** JUnit 5 y Cucumber (BDD) validando todos los flujos de negocio y endpoints.
+- **Política de Calidad:** Verificación estricta de cobertura con **JaCoCo** configurado en `pom.xml` con regla de fallo ante una cobertura de líneas inferior al **100%**.
+- **Artefactos:** Se publican los reportes de Surefire y JaCoCo HTML como evidencia persistente del build.
+
+### 2. Etapa de Análisis de Seguridad y Vulnerabilidades (`security-scan`) — IE3
+- **Dependabot (`.github/dependabot.yml`):** Monitoreo semanal de actualizaciones y vulnerabilidades en dependencias Maven, imagen base de Docker y flujos de GitHub Actions.
+- **Snyk:** Escaneo de composición de software (SCA) en dependencias Maven (`--severity-threshold=high`).
+- **Aquasecurity Trivy (Quality Gate Bloqueante):** Escáner de seguridad con política de fallo inmediata (`exit-code: 1`) ante vulnerabilidades **CRITICAL** o **HIGH**. Si se detectan vulnerabilidades no mitigadas, el pipeline se bloquea e impide avanzar al empaquetado y despliegue.
+
+### 3. Etapa de Construcción y Optimización Docker (`docker-build`) — IE1
+- **Multi-Stage Build:** Separa el entorno de compilación (Maven + Temurin 21) del runtime final.
+- **Imagen Base Optimizada:** `eclipse-temurin:21-jre-alpine`, reduciendo el tamaño a menos de 180 MB y mitigando superficie de ataque.
+- **Gobernanza y Privilegios:** Ejecución bajo usuario no privilegiado `appuser:appgroup` (UID/GID 10001).
+- **Parámetros JVM en Contenedor:** `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0`.
+- **Escaneo de Imagen:** Trivy analiza la imagen generada antes de exportarla.
+
+### 4. Etapa de Despliegue Simulado y Orquestación (`deploy-simulation`) — IE4 & IE5
+- **Entorno Cloud Simulado:** Despliegue automatizado con `docker compose up -d`.
+- **Healthcheck & Smoke Tests:** Sondeo activo hasta confirmar estado `healthy` y validación de endpoints HTTP (`GET /api/pagos`, `GET /v3/api-docs`, `POST /api/pagos`).
+- **Validación Kubernetes:** Verificación de sintaxis, esquema y gobernanza de los manifiestos K8s mediante `kubectl apply --dry-run=client -k k8s/`.
+
+---
+
+# Trazabilidad y Gobernanza (IE4)
+
+La trazabilidad desde el desarrollo hasta el entorno de despliegue se garantiza mediante los siguientes mecanismos:
+
+1. **Etiquetado Semántico de Contenedores:**
+   - Cada imagen generada se etiqueta con el hash del commit de Git: `duoc/jv0101-caso06-pagos:${{ github.sha }}` y la versión del release `duoc/jv0101-caso06-pagos:1.0.0`.
+2. **Resumen de Ejecución (GitHub Step Summary):**
+   - El pipeline publica automáticamente una tabla de auditoría con el Commit SHA, autor del trigger, rama, número de ejecución, resultado de pruebas de cobertura, estado de Quality Gate de seguridad y estado de los Smoke Tests.
+3. **Inmutabilidad de Artefactos:**
+   - La imagen Docker probada y validada en CI es la misma que se transfiere mediante artefactos y se despliega en el entorno simulado.
+
+---
+
+# Estrategia de Orquestación de Contenedores (IE5)
+
+El proyecto ofrece dos niveles de orquestación listos para producción:
+
+### Nivel 1: Docker Compose (`docker-compose.yml`)
+- **Límites de Recursos:** Asignación de topes estrictos (`limits: cpus 1.0, memory 512M`) y reservas garantizadas (`reservations: cpus 0.25, memory 256M`).
+- **Healthcheck Nativo:** Comprobación periódica con política de reintentos y tiempo de calentamiento (`start_period: 25s`).
+- **Aislamiento de Red:** Red bridge privada `pagos-net`.
+
+### Nivel 2: Kubernetes Manifests ([`k8s/`](k8s/))
+- **Namespace dedicado:** `pagos-system` para aislamiento multi-tenant.
+- **Alta Disponibilidad:** `Deployment` con 2 réplicas base y estrategia de despliegue `RollingUpdate` con cero tiempo de inactividad (`maxUnavailable: 0`, `maxSurge: 1`).
+- **Gobernanza de Seguridad Pod/Contenedor (IE3):** `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, capacidades del kernel revocadas (`drop: ["ALL"]`).
+- **Sondeos de Salud (Probes):** `livenessProbe` para autorecuperación y `readinessProbe` para balanceo de carga.
+- **Escalabilidad Elástica (HPA):** `HorizontalPodAutoscaler` que escala de forma automática de **2 a 5 réplicas** ante picos de demanda (70% CPU o 80% RAM).
+
+---
+
+## Cómo ejecutar localmente
 
 ```bash
+# Compilar y ejecutar con Maven
 mvn spring-boot:run
 ```
 
 ## Cómo ejecutar con Docker
 
 ```bash
+# Construcción y levantamiento con Docker Compose
 docker compose up --build
-# http://localhost:8080
+# Abrir http://localhost:8080
+```
+
+## Cómo desplegar en Kubernetes (Local o Clúster)
+
+```bash
+# Aplicar todos los manifiestos con Kustomize
+kubectl apply -k k8s/
+
+# Monitorear pods y HPA
+kubectl get pods,hpa,svc -n pagos-system
 ```
 
 ## Cómo ejecutar las pruebas
 
 ```bash
-mvn test      # unit tests + Cucumber
-mvn verify    # + verificación de cobertura JaCoCo (100% LINE, falla si baja)
+mvn test      # Pruebas unitarias + Cucumber
+mvn verify    # Pruebas + Verificación de cobertura JaCoCo (100% LINE, falla si baja)
 ```
+
+---
+
 ## Elección y Justificación de ramificación
 
 Como equipo hemos decidido implementar la estrategia GitFlow, siendo concientes de que en casos como estos desarrollos "pequeños y de cortos periodos de desarrollo para arreglos y funciones" sería teoricamente correcto usar Trunk-Based, pero existen 2 factores que marcaron el camino a la elección. 
@@ -76,36 +168,47 @@ Para dar conclusión a este apartado sintetizaremos la respuesta a que de tratar
 # Convenciones y Buenas Prácticas del Proyecto
 
 ## 1. Flujo de Trabajo (Git Workflow)
-* **`main`:** Código principal o mejor conocido como ""producción"". Solo puede mezclarsen con las ramas  `develop` y o `hotfix/`.
+* **`main`:** Código principal o mejor conocido como "producción". Solo puede mezclarse con las ramas `develop` y o `hotfix/`.
 * **`develop`:** Rama de desarrollo para integrar nuevas funciones o cambios de la rama main para la próxima versión.
 * **Nomenclatura de ramas:**
-  * `feature/ID-descripcion` (ej. `feature/JIRA-123-login`)
+  * `feature/ID-descripcion` (ej. `feature/evaluacion-2-pipeline-cicd`)
   * `bugfix/ID-descripcion`
   * `hotfix/ID-descripcion`
 
 ## 2. Convenciones de Commits
 Seguimos el estándar de Conventional Commits:
-* `feat:` Nueva función funcionalidades.
-* `fix:` Correción del código.
+* `feat:` Nueva funcionalidad o adición al proyecto.
+* `fix:` Corrección del código.
 * `docs:` Cambios o adiciones de la documentación.
-* `chore:` Todo lo que tenga que ver con el mantenimiento del código y en nuestro caso para agrtegar el workflow del hola mundo.
-
+* `chore:` Mantenimiento de configuración, dependencias o pipelines CI/CD.
 
 ## 3. Proceso de Revisión de Código y Pull Requests
 * Ningún desarrollador debe hacer push directo a `develop` o `main`.
 * Todo PR requiere al menos 1 revisor asignado.
+* El pipeline CI/CD en GitHub Actions debe aprobar todas las pruebas y Quality Gates de seguridad antes de permitir el merge.
 * Eliminar la rama temporal inmediatamente después del merge.
 
-## 4. Uso de IA
+---
 
-Como equipo usamos la inteligencia artificial "Gemini", se usó con fines meramente de soporte, los cuales fueron:
+## 4. Declaración de Uso Ético de Inteligencia Artificial (IA)
 
-* Correción de errores de sintaxis (en el workflow especificamente, lo copié y pegué de la guía y me salía error, sorry profe).
+En conformidad con las políticas académicas y la guía de uso de IA de Duoc UC ([https://bibliotecas.duoc.cl/ia](https://bibliotecas.duoc.cl/ia)):
 
-* Traducción de los errores (va relacionado con el primer punto)
+- **Herramientas utilizadas:** Asistente de IA (Gemini).
+- **Alcance y aplicación:** 
+  1. Apoyo en la formulación y validación de sintaxis para los flujos de trabajo de GitHub Actions (`ci-cd.yml`) y manifiestos declarativos de Kubernetes (`k8s/`).
+  2. Asistencia en la estructuración técnica de diagramas Mermaid y tablas de trazabilidad en Markdown.
+- **Validación humana:** Toda la configuración, código, lógica del microservicio y políticas de gobernanza fueron revisadas, probadas y validadas directamente por el equipo de desarrollo, asegurando su perfecta correspondencia con los requerimientos de la evaluación.
+- **Restricción estricta:** Las reflexiones individuales, análisis críticos y conclusiones fueron redactadas de manera personal y autónoma por cada integrante, sin uso de IA generativa.
 
-## Reflexiones finales
+---
 
-* Sebastián Osorio: Con esta primera entrega, en lo personal me deja con una sensación de satisfacción y optimismo, principalmente porque aprender las buenas prácticas de git, el uso correcto de las ramas y el uso de los pull request me significa una herramienta fundamental en mi repertyorio para usarlo en el futuro cercano, afectando positivamente en mis futuros proyectos y en concecuencia, en la relación y convivencia con mis futuros compañeros de trabajo y mi carrera profecional.
+## Reflexiones Finales e Individuales
 
-* Vicente Monsalves: el proyecto esta siendo interesante ya que pone a prueba lo que eh aprendido en herramientas devops  y eso representa un desafio grande al ser un nuevo proyecto, ya que pondra a prueba que tan bien soy capaz de ejecutar la consola de codigos y github de una manera bastante distinta y mas compleja a lo que anteriormente estoy acostumbrado.
+### Evaluación Parcial N°1:
+* **Sebastián Osorio:** Con esta primera entrega, en lo personal me deja con una sensación de satisfacción y optimismo, principalmente porque aprender las buenas prácticas de git, el uso correcto de las ramas y el uso de los pull request me significa una herramienta fundamental en mi repertorio para usarlo en el futuro cercano, afectando positivamente en mis futuros proyectos y en consecuencia, en la relación y convivencia con mis futuros compañeros de trabajo y mi carrera profesional.
+* **Vicente Monsalves:** El proyecto está siendo interesante ya que pone a prueba lo que he aprendido en herramientas DevOps y eso representa un desafío grande al ser un nuevo proyecto, ya que pondrá a prueba qué tan bien soy capaz de ejecutar la consola de códigos y GitHub de una manera bastante distinta y más compleja a lo que anteriormente estoy acostumbrado.
+
+### Evaluación Parcial N°2 (Encargo: Añadiéndole complejidad a nuestro pipeline):
+* **Sebastián Osorio:** En esta segunda evaluación, la incorporación de un pipeline CI/CD completo me permitió dimensionar la importancia de la automatización en entornos de calidad modernos. Trabajar en la configuración de compuertas de seguridad (Quality Gates) con Snyk y Trivy, junto con la política de bloqueo ante vulnerabilidades críticas, demuestra que la seguridad no es una etapa aislada sino transversal al ciclo de desarrollo (DevSecOps). Además, diseñar manifiestos de Kubernetes con escalabilidad horizontal (HPA) y sondeos de salud me brindó una visión clara de cómo orquestar soluciones resilientes y preparadas para la nube.
+* **Vicente Monsalves:** La complejidad agregada en esta etapa representó un salto significativo en el aprendizaje práctico. Contenerizar eficientemente mediante Dockerfiles multi-stage basados en Alpine y usuarios sin privilegios root me enseñó el impacto que tienen las buenas prácticas de gobernanza en la reducción de vulnerabilidades. Asimismo, automatizar los smoke tests y simular el despliegue dentro del propio pipeline de GitHub Actions nos entrega la tranquilidad de que cada cambio que llegue a las ramas principales está probado, empaquetado y listo para producción sin intervenciones manuales propensas a error.
