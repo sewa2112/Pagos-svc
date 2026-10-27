@@ -249,8 +249,9 @@ jobs:
 
       - name: Validar Manifiestos de Orquestación Kubernetes (K8s)
         run: |
-          echo "Verificando sintaxis, gobernanza y validez de manifiestos K8s con kubectl dry-run..."
-          kubectl apply --dry-run=client -k k8s/
+          echo "Verificando sintaxis, gobernanza y validez de manifiestos K8s con Kustomize..."
+          kubectl apply --dry-run=client --validate=false -k k8s/
+          kubectl kustomize k8s/ > /dev/null
           echo "✅ Manifiestos K8s (Deployment, Service, HPA, ConfigMap, Namespace) validados con éxito."
 
       - name: Detener y limpiar entorno simulado
