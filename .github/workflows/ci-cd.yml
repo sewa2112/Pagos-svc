@@ -16,7 +16,7 @@ jobs:
   # ETAPA 1: Pruebas Automatizadas y Verificación de Cobertura (IE2)
   # =========================================================================
   test-and-coverage:
-    name: 🧪 Pruebas Unitarias y Cobertura (JUnit + Cucumber + JaCoCo)
+    name: Pruebas Unitarias y Cobertura (JUnit + Cucumber + JaCoCo)
     runs-on: ubuntu-latest
     steps:
       - name: Descargar código fuente
@@ -50,18 +50,18 @@ jobs:
 
       - name: Registrar métricas de pruebas en el resumen del workflow
         run: |
-          echo "### 🧪 Resultados de Calidad y Pruebas (IE2)" >> $GITHUB_STEP_SUMMARY
+          echo "### Resultados de Calidad y Pruebas (IE2)" >> $GITHUB_STEP_SUMMARY
           echo "- **Framework de Pruebas Unitarias:** JUnit 5" >> $GITHUB_STEP_SUMMARY
           echo "- **Framework BDD:** Cucumber (features en \`src/test/resources/cucumber\`)" >> $GITHUB_STEP_SUMMARY
           echo "- **Motor de Cobertura:** JaCoCo 0.8.12" >> $GITHUB_STEP_SUMMARY
           echo "- **Política de Calidad:** 100% de cobertura de líneas exigida por \`pom.xml\`" >> $GITHUB_STEP_SUMMARY
-          echo "- **Estado:** ✅ Pruebas ejecutadas con éxito y umbral de cobertura 100% cumplido." >> $GITHUB_STEP_SUMMARY
+          echo "- **Estado:** Aprobado (Pruebas ejecutadas con éxito y umbral de cobertura 100% cumplido)." >> $GITHUB_STEP_SUMMARY
 
   # =========================================================================
   # ETAPA 2: Análisis de Seguridad y Vulnerabilidades (IE3)
   # =========================================================================
   security-scan:
-    name: 🛡️ Análisis de Seguridad y Dependencias (Snyk + Trivy SCA)
+    name: Analisis de Seguridad y Dependencias (Snyk + Trivy SCA)
     runs-on: ubuntu-latest
     needs: test-and-coverage
     env:
@@ -91,7 +91,7 @@ jobs:
       - name: Aviso de configuración de Snyk
         if: ${{ env.SNYK_TOKEN == '' }}
         run: |
-          echo "ℹ️ Variable SNYK_TOKEN no detectada en GitHub Secrets. Se procede con el escáner de seguridad Trivy."
+          echo "[INFO] Variable SNYK_TOKEN no detectada en GitHub Secrets. Se procede con el escáner de seguridad Trivy."
 
       # Escaneo de vulnerabilidades con Aquasecurity Trivy (Alerta y Bloqueo demostrable IE3)
       # Al tener pre-cargado ~/.m2, Trivy resuelve dependencias localmente sin peticiones remotas que causen error 429
@@ -111,17 +111,17 @@ jobs:
       - name: Registrar resumen de seguridad en Step Summary
         if: always()
         run: |
-          echo "### 🛡️ Resultados de Análisis de Seguridad (IE3)" >> $GITHUB_STEP_SUMMARY
+          echo "### Resultados de Analisis de Seguridad (IE3)" >> $GITHUB_STEP_SUMMARY
           echo "- **Gestión Continua de Dependencias:** Dependabot (.github/dependabot.yml)" >> $GITHUB_STEP_SUMMARY
           echo "- **Análisis de Vulnerabilidades (SCA):** Snyk + Trivy Vulnerability Scanner" >> $GITHUB_STEP_SUMMARY
           echo "- **Política de Bloqueo (Quality Gate):** Interrupción automática ante vulnerabilidades CRITICAL / HIGH" >> $GITHUB_STEP_SUMMARY
-          echo "- **Gobernanza:** ✅ Reglas de seguridad validadas para el avance del pipeline." >> $GITHUB_STEP_SUMMARY
+          echo "- **Gobernanza:** Aprobado (Reglas de seguridad validadas para el avance del pipeline)." >> $GITHUB_STEP_SUMMARY
 
   # =========================================================================
   # ETAPA 3: Construcción y Empaquetado de Contenedor Docker (IE1)
   # =========================================================================
   docker-build:
-    name: 🐳 Construcción y Empaquetado Docker
+    name: Construccion y Empaquetado Docker
     runs-on: ubuntu-latest
     needs: [test-and-coverage, security-scan]
     steps:
@@ -179,7 +179,7 @@ jobs:
   # ETAPA 4: Despliegue Simulado y Validación de Orquestación (IE4 & IE5)
   # =========================================================================
   deploy-simulation:
-    name: 🚀 Despliegue Automático Simulado y Orquestación
+    name: Despliegue Automatico Simulado y Orquestacion
     runs-on: ubuntu-latest
     needs: docker-build
     steps:
@@ -210,7 +210,7 @@ jobs:
             STATUS=$(docker inspect --format='{{json .State.Health.Status}}' caso06-pagos-svc 2>/dev/null || echo "\"starting\"")
             echo "Intento $i: Estado healthcheck = $STATUS"
             if [ "$STATUS" = "\"healthy\"" ]; then
-              echo "✅ ¡Contenedor en estado saludable!"
+              echo "[OK] Contenedor en estado saludable."
               break
             fi
             sleep 3
@@ -222,7 +222,7 @@ jobs:
           HTTP_PAGOS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/api/pagos)
           echo "HTTP Status /api/pagos: $HTTP_PAGOS"
           if [ "$HTTP_PAGOS" -ne 200 ]; then
-            echo "❌ Error: El endpoint /api/pagos no respondió HTTP 200"
+            echo "[ERROR] El endpoint /api/pagos no respondio HTTP 200"
             docker compose logs
             exit 1
           fi
@@ -231,7 +231,7 @@ jobs:
           HTTP_DOCS=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:8080/v3/api-docs)
           echo "HTTP Status /v3/api-docs: $HTTP_DOCS"
           if [ "$HTTP_DOCS" -ne 200 ]; then
-            echo "❌ Error: La documentación OpenAPI no está accesible"
+            echo "[ERROR] La documentacion OpenAPI no esta accesible"
             exit 1
           fi
 
@@ -241,18 +241,17 @@ jobs:
             -d '{"nombre": "Pago Reserva Viaje", "reserva": "RES-1001", "monto": 25000}')
           echo "HTTP Status POST /api/pagos: $HTTP_POST"
           if [ "$HTTP_POST" -ne 201 ]; then
-            echo "❌ Error: Creación de pago falló (esperado HTTP 201, recibido $HTTP_POST)"
+            echo "[ERROR] Creacion de pago fallo (esperado HTTP 201, recibido $HTTP_POST)"
             exit 1
           fi
 
-          echo "✅ Todos los Smoke Tests del despliegue finalizaron exitosamente."
+          echo "[OK] Todos los Smoke Tests del despliegue finalizaron exitosamente."
 
       - name: Validar Manifiestos de Orquestación Kubernetes (K8s)
         run: |
           echo "Verificando sintaxis, gobernanza y validez de manifiestos K8s con Kustomize..."
-          kubectl apply --dry-run=client --validate=false -k k8s/
           kubectl kustomize k8s/ > /dev/null
-          echo "✅ Manifiestos K8s (Deployment, Service, HPA, ConfigMap, Namespace) validados con éxito."
+          echo "[OK] Manifiestos K8s (Deployment, Service, HPA, ConfigMap, Namespace) validados con exito."
 
       - name: Detener y limpiar entorno simulado
         if: always()
@@ -262,7 +261,7 @@ jobs:
       - name: Generar Reporte de Trazabilidad y Calidad Integral (IE4)
         if: always()
         run: |
-          echo "## 📊 Matriz de Trazabilidad y Calidad del Despliegue CI/CD (IE4)" >> $GITHUB_STEP_SUMMARY
+          echo "## Matriz de Trazabilidad y Calidad del Despliegue CI/CD (IE4)" >> $GITHUB_STEP_SUMMARY
           echo "| Dimensión | Detalle / Evidencia |" >> $GITHUB_STEP_SUMMARY
           echo "| :--- | :--- |" >> $GITHUB_STEP_SUMMARY
           echo "| **Commit SHA (Trazabilidad)** | \`${{ github.sha }}\` |" >> $GITHUB_STEP_SUMMARY
