@@ -1,8 +1,36 @@
+version: "3.8"
+
 services:
   pagos-svc:
-    build: .
+    build:
+      context: .
+      dockerfile: Dockerfile
     image: duoc/jv0101-caso06-pagos:1.0.0
     container_name: caso06-pagos-svc
+    restart: unless-stopped
     ports:
       - "${PORT:-8080}:8080"
-    restart: unless-stopped
+    environment:
+      - PORT=8080
+      - SPRING_PROFILES_ACTIVE=prod
+      - JAVA_OPTS=-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0
+    deploy:
+      resources:
+        limits:
+          cpus: "1.00"
+          memory: 512M
+        reservations:
+          cpus: "0.25"
+          memory: 256M
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/v3/api-docs"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 25s
+    networks:
+      - pagos-net
+
+networks:
+  pagos-net:
+    driver: bridge

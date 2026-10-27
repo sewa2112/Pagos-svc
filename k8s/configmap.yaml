@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: pagos-config
+  namespace: pagos-system
+  labels:
+    app.kubernetes.io/name: pagos-svc
+data:
+  PORT: "8080"
+  SPRING_PROFILES_ACTIVE: "prod"
