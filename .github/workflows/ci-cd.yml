@@ -34,7 +34,7 @@ jobs:
 
       - name: Publicar reportes de pruebas Surefire (JUnit 5 / Cucumber)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: surefire-test-reports
           path: target/surefire-reports/
@@ -42,7 +42,7 @@ jobs:
 
       - name: Publicar reporte HTML de cobertura JaCoCo
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: jacoco-coverage-report
           path: target/site/jacoco/
@@ -154,7 +154,7 @@ jobs:
           docker save duoc/jv0101-caso06-pagos:1.0.0 -o pagos-svc-image.tar
 
       - name: Publicar artefacto de imagen Docker
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: docker-image-artifact
           path: pagos-svc-image.tar
