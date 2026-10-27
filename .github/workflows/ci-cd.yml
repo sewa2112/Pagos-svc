@@ -20,7 +20,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Descargar código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar JDK 21 (Temurin)
         uses: actions/setup-java@v4
@@ -68,7 +68,7 @@ jobs:
       SNYK_TOKEN: ${{ secrets.SNYK_TOKEN }}
     steps:
       - name: Descargar código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar JDK 21 (Temurin) con caché Maven
         uses: actions/setup-java@v4
@@ -124,7 +124,7 @@ jobs:
     needs: [test-and-coverage, security-scan]
     steps:
       - name: Descargar código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Configurar Docker Buildx
         uses: docker/setup-buildx-action@v3
@@ -181,7 +181,7 @@ jobs:
     needs: docker-build
     steps:
       - name: Descargar código fuente
-        uses: actions/checkout@v4
+        uses: actions/checkout@v7
 
       - name: Descargar imagen Docker empaquetada
         uses: actions/download-artifact@v4
