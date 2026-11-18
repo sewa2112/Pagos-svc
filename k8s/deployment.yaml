@@ -21,6 +21,10 @@ spec:
     metadata:
       labels:
         app: pagos-svc
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
     spec:
       securityContext:
         runAsNonRoot: true
@@ -52,7 +56,7 @@ spec:
                 - ALL
           livenessProbe:
             httpGet:
-              path: /v3/api-docs
+              path: /actuator/health/liveness
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 15
@@ -60,10 +64,9 @@ spec:
             failureThreshold: 3
           readinessProbe:
             httpGet:
-              path: /v3/api-docs
+              path: /actuator/health/readiness
               port: 8080
             initialDelaySeconds: 20
             periodSeconds: 10
             timeoutSeconds: 5
             failureThreshold: 2
-

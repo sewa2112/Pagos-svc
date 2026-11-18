@@ -6,6 +6,10 @@ metadata:
   labels:
     app: pagos-svc
     app.kubernetes.io/name: pagos-svc
+  annotations:
+    prometheus.io/scrape: "true"
+    prometheus.io/path: "/actuator/prometheus"
+    prometheus.io/port: "8080"
 spec:
   type: ClusterIP
   selector:
@@ -15,4 +19,3 @@ spec:
       port: 80
       targetPort: 8080
       protocol: TCP
-
