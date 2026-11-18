@@ -4,14 +4,16 @@ Microservicio correspondiente al **caso caso06 — ViajaMejor** (Reservas de via
 
 | Dimensión | Detalle |
 |---|---|
-| **Asignatura** | DOY0101 — Ingeniería DevOps (Evaluación Parcial N°2) |
-| **Ponderación** | 45% |
-| **Stack** | Spring Boot 3.3.5 · Java 21 · Maven · Spring Data JPA · H2 · springdoc-openapi |
-| **Calidad** | JaCoCo cobertura LINE 100% · Pruebas unitarias JUnit 5 · Cucumber BDD |
-| **Seguridad** | Dependabot · Snyk · Aquasecurity Trivy (Quality Gate bloqueante) |
-| **Contenedores** | Dockerfile Multi-stage · Alpine Linux JRE 21 · Usuario no-root |
-| **Orquestación** | Docker Compose (límites y healthcheck) · Kubernetes (Deployment, Service, HPA) |
-| **CI/CD** | GitHub Actions (`.github/workflows/ci-cd.yml`) con despliegue simulado y trazabilidad |
+| **Asignatura** | DOY0101 — Ingeniería DevOps (Evaluación Parcial N°3: Observabilidad y entornos reales) |
+| **Ponderación** | 30% |
+| **Stack Base** | Spring Boot 3.3.5 · Java 21 · Maven · Spring Data JPA · H2 · springdoc-openapi |
+| **Observabilidad (IE1)** | Spring Boot Actuator · Micrometer Prometheus · Servidor Prometheus v2.54.1 · Grafana v11.2.0 |
+| **Orquestación Cloud (IE2)** | Kubernetes Manifests declarativos con Kustomize · Service y Pod Scrape Annotations · Probes Actuator |
+| **Tableros / Dashboards (IE3)** | Dashboard interactivo en Grafana (`pagos-metrics-dashboard.json`) · Matriz en GitHub Step Summary |
+| **Cumplimiento y Auditoría (IE5)** | Script automatizado de auditoría (`scripts/compliance-audit.sh`) · SonarQube · Branch Protection Rules |
+| **Toma de Decisiones (IE4)** | Matriz técnica de escalabilidad elástica (HPA), alertas de resiliencia y prevención de fallas |
+| **Mecanismo de Bloqueo (IE6)** | Quality Gates automatizados con fail-fast ante fallas de cobertura (100%), auditoría o despliegue |
+| **CI/CD Pipeline** | GitHub Actions (`.github/workflows/ci-cd.yml`) con 4 etapas integradas de validación y despliegue |
 
 ---
 
@@ -19,14 +21,18 @@ Microservicio correspondiente al **caso caso06 — ViajaMejor** (Reservas de via
 
 Administra los datos y la lógica del dominio de Pagos del caso **caso06 (ViajaMejor)**. Su base de datos es una **H2 en memoria** (un microservicio por base), cumpliendo aislamiento de datos por dominio.
 
-## Página de presentación
+## Página de presentación y Observabilidad
 
-Al ejecutar el servicio, `http://localhost:8080/` muestra la página de presentación del microservicio con documentación y enlaces a:
+Al ejecutar el servicio en `http://localhost:8080/`, se dispone de la interfaz interactiva con accesos directos a:
 
+- **Página de Bienvenida**: `/`
 - **Swagger UI**: `/swagger-ui/index.html`
-- **OpenAPI (json/yaml)**: `/v3/api-docs` / `/v3/api-docs.yaml`
+- **OpenAPI**: `/v3/api-docs`
 - **ReDoc**: `/redoc.html`
 - **H2 Console**: `/h2-console`
+- **Healthcheck Actuator**: `/actuator/health` (Liveness: `/actuator/health/liveness`, Readiness: `/actuator/health/readiness`)
+- **Métricas Prometheus**: `/actuator/prometheus`
+- **Métricas Generales Actuator**: `/actuator/metrics`
 
 ## Endpoints REST
 
@@ -50,155 +56,122 @@ La documentación completa se ubica en la carpeta [`docs/`](docs/):
 - [`docs/03_Pruebas.md`](docs/03_Pruebas.md) — Pruebas unitarias, cobertura JaCoCo 100% y Cucumber.
 - [`docs/04_Despliegue.md`](docs/04_Despliegue.md) — Estrategias de contenerización, orquestación (Compose / K8s) y CD.
 - [`docs/05_Justificacion.md`](docs/05_Justificacion.md) — Justificación técnica y arquitectura cloud.
+- [`docs/06_Observabilidad.md`](docs/06_Observabilidad.md) — **Guía técnica completa de observabilidad, métricas, auditoría de cumplimiento normativo y toma de decisiones (Evaluación N°3).**
 - [`docs/diagramas/`](docs/diagramas/) — C4, diagramas de secuencia e infraestructura.
 
 ---
 
-# Pipeline CI/CD en GitHub Actions (Evaluación Parcial N°2)
+# Pipeline CI/CD en GitHub Actions (Evaluación Parcial N°3)
 
-El pipeline de integración y entrega continua se implementa en [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) y automatiza el ciclo de vida completo del microservicio garantizando **calidad, seguridad, gobernanza y trazabilidad**.
+El pipeline implementado en [`.github/workflows/ci-cd.yml`](.github/workflows/ci-cd.yml) automatiza el ciclo de vida completo del microservicio incorporando observabilidad, métricas, auditoría de cumplimiento normativo y compuertas de calidad bloqueantes:
 
 ```mermaid
 flowchart LR
-    A["Push / PR\n(main, develop)"] --> B["Etapa 1: Calidad (IE2)\nJUnit 5 + Cucumber\nJaCoCo (100% Cobertura)"]
-    B --> C["Etapa 2: Seguridad (IE3)\nSnyk (SCA)\nTrivy (SAST/Bloqueo)"]
-    C --> D["Etapa 3: Empaquetado (IE1)\nBuildx Multi-Stage\nAlpine + Non-Root\nTrivy Container Scan"]
-    D --> E["Etapa 4: Despliegue Simulado (IE4 & IE5)\nDocker Compose Up\nHealthcheck Loop\nSmoke Tests HTTP 200/201\nValidación K8s Dry-Run\nMatriz de Trazabilidad"]
+    A["Push / PR\n(main, develop)"] --> B["Etapa 1: Calidad (IE2 / IE6)\nJUnit 5 + Cucumber\nJaCoCo (100% Cobertura)"]
+    B --> C["Etapa 2: Gobernanza (IE5 / IE6)\nAuditoría Normativa CIS/OWASP\nSnyk + Trivy SCA\nSonarQube Properties"]
+    C --> D["Etapa 3: Empaquetado (IE1)\nBuildx Multi-Stage\nTemurin 21 JRE Alpine\nUsuario Non-Root"]
+    D --> E["Etapa 4: Despliegue y Observabilidad (IE1, IE2, IE3, IE4, IE6)\nDocker Compose (Pagos + Prometheus + Grafana)\nActuator Healthcheck Loop\nSmoke Tests & Endpoints Prometheus\nValidación K8s Kustomize\nDashboard Integrado CI/CD"]
 ```
 
-### 1. Etapa de Pruebas Automatizadas y Cobertura (`test-and-coverage`) — IE2
+### 1. Etapa de Calidad y Cobertura (`test-and-coverage`) — IE2 & IE6
 - **Frameworks:** JUnit 5 y Cucumber (BDD) validando todos los flujos de negocio y endpoints.
-- **Política de Calidad:** Verificación estricta de cobertura con **JaCoCo** configurado en `pom.xml` con regla de fallo ante una cobertura de líneas inferior al **100%**.
-- **Artefactos:** Se publican los reportes de Surefire y JaCoCo HTML como evidencia persistente del build.
+- **Mecanismo de Interrupción (IE6):** Verificación estricta de cobertura con **JaCoCo** configurado en `pom.xml` al **100% de líneas**. Si la cobertura baja o un test falla, el pipeline aborta de inmediato.
+- **Artefactos:** Publicación persistente de reportes Surefire y JaCoCo HTML.
 
-### 2. Etapa de Análisis de Seguridad y Vulnerabilidades (`security-scan`) — IE3
-- **Dependabot (`.github/dependabot.yml`):** Monitoreo semanal de actualizaciones y vulnerabilidades en dependencias Maven, imagen base de Docker y flujos de GitHub Actions.
-- **Snyk:** Escaneo de composición de software (SCA) en dependencias Maven (`--severity-threshold=high`).
-- **Aquasecurity Trivy (Quality Gate Bloqueante):** Escáner de seguridad con política de fallo inmediata (`exit-code: 1`) ante vulnerabilidades **CRITICAL** o **HIGH**. Si se detectan vulnerabilidades no mitigadas, el pipeline se bloquea e impide avanzar al empaquetado y despliegue.
+### 2. Etapa de Cumplimiento Normativo y Seguridad (`compliance-and-security`) — IE5 & IE6
+- **Auditoría Automatizada (`scripts/compliance-audit.sh`):** Ejecuta 12 reglas que auditan el cumplimiento de normativas CIS Docker Benchmark, NIST SP 800-190 y OWASP (usuario no-root, sondeos de salud, límites de CPU/RAM, PodSecurityContext, ausencia de secretos en código).
+- **Quality Gate Bloqueante (IE6):** Si el script de auditoría detecta violaciones críticas, finaliza con código de error 1 y detiene el pipeline protegiendo el entorno productivo.
+- **Análisis Estático y Dependencias:** Configuración `sonar-project.properties` para SonarQube, escaneo Snyk/Trivy y monitoreo continuo con Dependabot.
 
-### 3. Etapa de Construcción y Optimización Docker (`docker-build`) — IE1
+### 3. Etapa de Construcción y Empaquetado (`docker-build`) — IE1
 - **Multi-Stage Build:** Separa el entorno de compilación (Maven + Temurin 21) del runtime final.
-- **Imagen Base Optimizada:** `eclipse-temurin:21-jre-alpine`, reduciendo el tamaño a menos de 180 MB y mitigando superficie de ataque.
-- **Gobernanza y Privilegios:** Ejecución bajo usuario no privilegiado `appuser:appgroup` (UID/GID 10001).
-- **Parámetros JVM en Contenedor:** `-XX:+UseContainerSupport -XX:MaxRAMPercentage=75.0`.
-- **Escaneo de Imagen:** Trivy analiza la imagen generada antes de exportarla.
+- **Imagen Base Optimizada:** `eclipse-temurin:21-jre-alpine`, reduciendo el tamaño a <180 MB y mitigando superficie de ataque.
+- **Seguridad en Runtime:** Ejecución bajo el usuario no privilegiado `appuser:appgroup` (UID/GID 10001).
+- **Healthcheck Integrado:** Comprobación nativa periódica hacia `/actuator/health`.
 
-### 4. Etapa de Despliegue Simulado y Orquestación (`deploy-simulation`) — IE4 & IE5
-- **Entorno Cloud Simulado:** Despliegue automatizado con `docker compose up -d`.
-- **Healthcheck & Smoke Tests:** Sondeo activo hasta confirmar estado `healthy` y validación de endpoints HTTP (`GET /api/pagos`, `GET /v3/api-docs`, `POST /api/pagos`).
-- **Validación Kubernetes:** Verificación de sintaxis, esquema y gobernanza de los manifiestos K8s mediante `kubectl apply --dry-run=client -k k8s/`.
-
----
-
-# Trazabilidad y Gobernanza (IE4)
-
-La trazabilidad desde el desarrollo hasta el entorno de despliegue se garantiza mediante los siguientes mecanismos:
-
-1. **Etiquetado Semántico de Contenedores:**
-   - Cada imagen generada se etiqueta con el hash del commit de Git: `duoc/jv0101-caso06-pagos:${{ github.sha }}` y la versión del release `duoc/jv0101-caso06-pagos:1.0.0`.
-2. **Resumen de Ejecución (GitHub Step Summary):**
-   - El pipeline publica automáticamente una tabla de auditoría con el Commit SHA, autor del trigger, rama, número de ejecución, resultado de pruebas de cobertura, estado de Quality Gate de seguridad y estado de los Smoke Tests.
-3. **Inmutabilidad de Artefactos:**
-   - La imagen Docker probada y validada en CI es la misma que se transfiere mediante artefactos y se despliega en el entorno simulado.
+### 4. Etapa de Despliegue Simulado y Observabilidad (`deploy-and-observability`) — IE1, IE2, IE3, IE4
+- **Stack Completo de Observabilidad:** Despliegue automatizado con `docker compose up -d` levantando el microservicio, el servidor **Prometheus v2.54** y el panel **Grafana v11**.
+- **Validación de Métricas en Vivo:** Verificación de `/actuator/health`, `/actuator/prometheus`, generación de tráfico sintético y comprobación del target de scrape en Prometheus.
+- **Validación Kubernetes (IE2):** Verificación de sintaxis, gobernanza y anotaciones de scrape (`prometheus.io/scrape: "true"`) mediante `kubectl kustomize k8s/`.
+- **Dashboard Integrado de Calidad y Despliegue (IE3):** Publicación automática en el GitHub Step Summary de las métricas clave:
+  1. *Tiempo de Despliegue* (segundos totales).
+  2. *Cobertura de Pruebas* (100% LINE).
+  3. *Uso de CPU y Memoria JVM* (MB consumidos en Heap).
+  4. *Errores Registrados* (conteo de errores HTTP 4xx/5xx).
 
 ---
 
-# Estrategia de Orquestación de Contenedores (IE5)
+# Stack de Monitoreo y Dashboards (IE1 & IE3)
 
-El proyecto ofrece dos niveles de orquestación listos para producción:
+### Cómo ejecutar localmente con Observabilidad completa:
 
-### Nivel 1: Docker Compose (`docker-compose.yml`)
-- **Límites de Recursos:** Asignación de topes estrictos (`limits: cpus 1.0, memory 512M`) y reservas garantizadas (`reservations: cpus 0.25, memory 256M`).
-- **Healthcheck Nativo:** Comprobación periódica con política de reintentos y tiempo de calentamiento (`start_period: 25s`).
-- **Aislamiento de Red:** Red bridge privada `pagos-net`.
+```bash
+# Iniciar microservicio + Prometheus + Grafana
+docker compose up -d --build
 
-### Nivel 2: Kubernetes Manifests ([`k8s/`](k8s/))
-- **Namespace dedicado:** `pagos-system` para aislamiento multi-tenant.
-- **Alta Disponibilidad:** `Deployment` con 2 réplicas base y estrategia de despliegue `RollingUpdate` con cero tiempo de inactividad (`maxUnavailable: 0`, `maxSurge: 1`).
-- **Gobernanza de Seguridad Pod/Contenedor (IE3):** `runAsNonRoot: true`, `allowPrivilegeEscalation: false`, capacidades del kernel revocadas (`drop: ["ALL"]`).
-- **Sondeos de Salud (Probes):** `livenessProbe` para autorecuperación y `readinessProbe` para balanceo de carga.
-- **Escalabilidad Elástica (HPA):** `HorizontalPodAutoscaler` que escala de forma automática de **2 a 5 réplicas** ante picos de demanda (70% CPU o 80% RAM).
+# Verificar estado de los contenedores
+docker compose ps
+```
+
+Acceso a las herramientas:
+- **Microservicio Pagos:** `http://localhost:8080/`
+- **Métricas Prometheus:** `http://localhost:8080/actuator/prometheus`
+- **Servidor Prometheus:** `http://localhost:9090` (Estado de targets en `/targets`, alertas en `/alerts`)
+- **Panel Grafana:** `http://localhost:3000` (Usuario: `admin` / Clave: `admin`)
+  - Tablero precargado: *Microservicio Pagos - Tablero de Observabilidad y Métricas DevOps* (`pagos-observability-dashboard`).
 
 ---
 
-## Cómo ejecutar localmente
+# Toma de Decisiones Técnicas Informadas (IE4)
 
-```bash
-# Compilar y ejecutar con Maven
-mvn spring-boot:run
-```
+La integración de observabilidad en el ciclo de vida del software permite adoptar decisiones automatizadas y operacionales fundamentadas:
 
-## Cómo ejecutar con Docker
-
-```bash
-# Construcción y levantamiento con Docker Compose
-docker compose up --build
-# Abrir http://localhost:8080
-```
-
-## Cómo desplegar en Kubernetes (Local o Clúster)
-
-```bash
-# Aplicar todos los manifiestos con Kustomize
-kubectl apply -k k8s/
-
-# Monitorear pods y HPA
-kubectl get pods,hpa,svc -n pagos-system
-```
-
-## Cómo ejecutar las pruebas
-
-```bash
-mvn test      # Pruebas unitarias + Cucumber
-mvn verify    # Pruebas + Verificación de cobertura JaCoCo (100% LINE, falla si baja)
-```
+1. **Autoescalado Horizontal Elástico:** El HPA de Kubernetes escala automáticamente de 2 a 5 réplicas cuando el uso de CPU supera el 70% o la memoria excede el 80%.
+2. **Autorecuperación de Instancias Degradadas:** `livenessProbe` reinicia pods inoperativos y `readinessProbe` retira del balanceador instancias que aún no inicializan sus conexiones.
+3. **Rollback y Aborto de Despliegue:** Si durante el despliegue la tasa de errores HTTP 5xx supera el 5% o los Smoke Tests fallan, el pipeline aborta la promoción productiva.
+4. **Prevención de Fugas de Memoria:** Alertas proactivas en Prometheus (`AltoConsumoMemoriaHeapJVM`) advierten cuando el Heap supera el 85%, permitiendo generar volcados diagnósticos antes de que ocurra un fallo general.
 
 ---
 
-## Elección y Justificación de ramificación
+# Políticas de Cumplimiento y Gobernanza (IE5)
 
-Como equipo hemos decidido implementar la estrategia GitFlow, siendo concientes de que en casos como estos desarrollos "pequeños y de cortos periodos de desarrollo para arreglos y funciones" sería teoricamente correcto usar Trunk-Based, pero existen 2 factores que marcaron el camino a la elección. 
+1. **Auditoría Automatizada (`scripts/compliance-audit.sh`):** Ejecutable en CI/CD que valida 12 controles de seguridad y gobernanza.
+2. **Políticas de Branch Protection en GitHub:**
+   - Prohibición de commits o pushes directos a `main` y `develop`.
+   - Pull Requests obligatorios con aprobación de al menos 1 revisor.
+   - Aprobación obligatoria de los status checks de CI/CD (`test-and-coverage`, `compliance-and-security`).
+3. **Análisis Estático SonarQube (`sonar-project.properties`):** Reglas de calidad y seguridad estática integradas.
 
-En primer lugar está la experiencia previa al usar GitFlow, desde nuestros primeros proyectos en conjunto, lo hicimos usando esta estrategia, pero no solo porque nos lo enseñó nuestro profe, sino porque facilita y hace el desarrollo en conjunto más seguro. 
-
-El segundo punto sería que precisamente por las dimenciones del proyecto y del equipo de desarrollo, se mitigan las principales carencias de la estrategia, como lo serían la alta dificultad al gestionar las ramas y los conflictos de fusión masivos con las ramas feature demasiado longevas.
-
-Para dar conclusión a este apartado sintetizaremos la respuesta a que de tratarse de un proyecto serio y de tener un personal más abundante, la respuesta sería escojer Trunk-based, la cual favorece el desarrollo y entrega de feedback de manera agil. Pero en nuestro caso es más bien lo contrario, teniendo un equipo de solo 2 personas y un proyecto pequeño, por lo que nos resulta optimo usar GitFlow para el searrollo de este proyecto.
+---
 
 # Convenciones y Buenas Prácticas del Proyecto
 
 ## 1. Flujo de Trabajo (Git Workflow)
-* **`main`:** Código principal o mejor conocido como "producción". Solo puede mezclarse con las ramas `develop` y o `hotfix/`.
-* **`develop`:** Rama de desarrollo para integrar nuevas funciones o cambios de la rama main para la próxima versión.
+* **`main`:** Código de producción protegido.
+* **`develop`:** Rama base de integración continua.
 * **Nomenclatura de ramas:**
-  * `feature/ID-descripcion` (ej. `feature/evaluacion-2-pipeline-cicd`)
+  * `feature/evaluacion-3-observabilidad`
   * `bugfix/ID-descripcion`
   * `hotfix/ID-descripcion`
 
 ## 2. Convenciones de Commits
-Seguimos el estándar de Conventional Commits:
+Seguimos el estándar de Conventional Commits sin emojis:
 * `feat:` Nueva funcionalidad o adición al proyecto.
 * `fix:` Corrección del código.
 * `docs:` Cambios o adiciones de la documentación.
 * `chore:` Mantenimiento de configuración, dependencias o pipelines CI/CD.
 
-## 3. Proceso de Revisión de Código y Pull Requests
-* Ningún desarrollador debe hacer push directo a `develop` o `main`.
-* Todo PR requiere al menos 1 revisor asignado.
-* El pipeline CI/CD en GitHub Actions debe aprobar todas las pruebas y Quality Gates de seguridad antes de permitir el merge.
-* Eliminar la rama temporal inmediatamente después del merge.
-
 ---
 
-## 4. Declaración de Uso Ético de Inteligencia Artificial (IA)
+## 3. Declaración de Uso Ético de Inteligencia Artificial (IA)
 
 En conformidad con las políticas académicas y la guía de uso de IA de Duoc UC ([https://bibliotecas.duoc.cl/ia](https://bibliotecas.duoc.cl/ia)):
 
 - **Herramientas utilizadas:** Asistente de IA (Gemini).
 - **Alcance y aplicación:** 
-  1. Apoyo en la formulación y validación de sintaxis para los flujos de trabajo de GitHub Actions (`ci-cd.yml`) y manifiestos declarativos de Kubernetes (`k8s/`).
-  2. Asistencia en la estructuración técnica de diagramas Mermaid y tablas de trazabilidad en Markdown.
-- **Validación humana:** Toda la configuración, código, lógica del microservicio y políticas de gobernanza fueron revisadas, probadas y validadas directamente por el equipo de desarrollo, asegurando su perfecta correspondencia con los requerimientos de la evaluación.
+  1. Apoyo en la formulación y validación de sintaxis para los flujos de trabajo de GitHub Actions (`ci-cd.yml`), configuraciones de Prometheus (`prometheus.yml`, `alerts.yml`) y tableros declarativos de Grafana (`pagos-metrics-dashboard.json`).
+  2. Asistencia en la estructuración de diagramas Mermaid y tablas de trazabilidad en Markdown.
+- **Validación humana:** Toda la configuración, código, lógica del microservicio, políticas de observabilidad y reglas de auditoría fueron revisadas, probadas y validadas directamente por el equipo de desarrollo, asegurando su perfecta correspondencia con los requerimientos de la evaluación.
 - **Restricción estricta:** Las reflexiones individuales, análisis críticos y conclusiones fueron redactadas de manera personal y autónoma por cada integrante, sin uso de IA generativa.
 
 ---
@@ -210,12 +183,9 @@ En conformidad con las políticas académicas y la guía de uso de IA de Duoc UC
 * **Vicente Monsalves:** El proyecto está siendo interesante ya que pone a prueba lo que he aprendido en herramientas DevOps y eso representa un desafío grande al ser un nuevo proyecto, ya que pondrá a prueba qué tan bien soy capaz de ejecutar la consola de códigos y GitHub de una manera bastante distinta y más compleja a lo que anteriormente estoy acostumbrado.
 
 ### Evaluación Parcial N°2 (Encargo: Añadiéndole complejidad a nuestro pipeline):
-**Sebastián Osorio:** Bueno profe, la verdad en esta entrega reviví un miedo que no quría volver a tener, los correos y notificaciónes del pipilines fallidos, pero con la ayuda de los videos, material y por su puesto la IA no fue taaan tedioso como las primeras veces que lo intenté en introducion a devops.
+* **Sebastián Osorio:** Bueno profe, la verdad en esta entrega reviví un miedo que no quería volver a tener: los correos y notificaciones de pipelines fallidos. Pero con la ayuda de los videos, material y por supuesto la IA no fue tan tedioso como las primeras veces que lo intenté en Introducción a DevOps. Pero también reconozco que fue gratificante una vez terminado y fue bien interesante la implementación de Snyk; es curioso la cantidad de vulnerabilidades que pueden haber, digo yo sabía que podrían haber unas cuantas, pero las más recurrentes llegaron por los lados que no me esperé. Así que, en resumen, esta entrega reforzó el conocimiento aprendido de pipelines y lo complementó con la detección de vulnerabilidades, lo que potenciará mi desempeño y capacidad laboral y profesional.
+* **Vicente Monsalves:** En lo personal, durante el desarrollo de esta segunda evaluación mi trabajo estuvo enfocado principalmente en el área de pruebas automatizadas y la seguridad del microservicio. Me concentré en estructurar los casos de prueba unitarios para validar tanto las operaciones principales del servicio de pagos como las respuestas de error ante datos inválidos, asegurando que se cumpliera con el porcentaje de cobertura exigido en el pipeline. Asimismo, apoyé en la configuración y revisión del escaneo de dependencias, lo que nos permitió entender cómo se detectan alertas de seguridad y cómo las reglas de bloqueo impiden que código vulnerable pase a la etapa de despliegue. Así que, para ser más específicos, esta unidad me permitió ver la otra cara de la industria: no solo la de armar un sistema, sino la de mantenerlo en base a la constante búsqueda de vulnerabilidades o fallos de diseño antes o después de la puesta en marcha.
 
-Pero también reconozco que fue gratificante una vez terminado y fue bien interesante la implementación de Snyk, es curioso la cantidad de vulnerabilidades que pueden haber, digo yo sabía que podrían haber unas cuantas, pero las que más recurrentes llegaron por los lados que no me esperé. Asi que, e resumen esta entrega reforzó conocimiento aprendido de pipelines y lo reforzó con la detección de vulnarabilidades, lo que reforzará mi desempeño y capacidad laboral y profesional.
-
- **Vicente Monsalves:** En lo personal Durante el desarrollo de esta segunda evaluación, mi trabajo estuvo enfocado principalmente en el área de pruebas automatizadas y la seguridad del microservicio. Me concentré en estructurar los casos de prueba unitarios para validar tanto las operaciones principales del servicio de pagos, como las respuestas de error ante datos inválidos, asegurando que se cumpliera con el porcentaje de cobertura exigido en el pipeline.
- 
-  Asimismo, apoyé en la configuración y revisión del escaneo de dependencias, lo que nos permitió entender cómo se detectan alertas de seguridad y cómo las reglas de bloqueo impiden que código vulnerable pase a la etapa de despliegue.
-
-Asi que para ser mas especificos, esta unidad me permitió ver la otra cara de la industria, no solo la de armar un sistema, sino que la de mantenerlo en base a la constante busqueda de vulnarabilidades o fallos de diseño antes o después de poner la puesta en marcha.
+### Evaluación Parcial N°3 (Encargo: Observabilidad y entornos reales en DevOps):
+* **Sebastián Osorio:** En esta tercera evaluación sobre observabilidad y gobernanza, el mayor aprendizaje consistió en entender que un sistema no termina cuando se despliega, sino cuando somos capaces de medir en tiempo real lo que está ocurriendo internamente. La integración de Spring Boot Actuator con Prometheus y Grafana me demostró cómo métricas como el consumo de memoria heap o la latencia en percentil 95 permiten tomar decisiones operacionales preventivas antes de que los usuarios sufran caídas. Además, la implementación del script de auditoría y las compuertas de bloqueo (Quality Gates) me reforzó la importancia de la gobernanza normativa dentro del pipeline, garantizando que ninguna versión sin límites de recursos o con configuraciones inseguras pueda llegar a producción.
+* **Vicente Monsalves:** Durante esta última entrega, el foco en observabilidad y cumplimiento normativo representó una etapa fundamental para consolidar todo el flujo DevOps. Trabajar en la configuración de tableros de control con las cuatro métricas clave (tiempo de despliegue, cobertura JaCoCo, uso de CPU/RAM y tasa de errores) me permitió ver con claridad cómo la telemetría se conecta directamente con el pipeline de entrega continua. Comprobar que el pipeline es capaz de detenerse automáticamente ante fallas de cobertura o no conformidades de seguridad me dio una comprensión práctica de cómo las grandes organizaciones garantizan la resiliencia y estabilidad de sus microservicios nativos en nube.
