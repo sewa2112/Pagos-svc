@@ -1,0 +1,17 @@
+global:
+  scrape_interval: 5s
+  evaluation_interval: 5s
+
+rule_files:
+  - "alerts.yml"
+
+scrape_configs:
+  - job_name: "pagos-svc"
+    metrics_path: "/actuator/prometheus"
+    scrape_interval: 5s
+    static_configs:
+      - targets: ["pagos-svc:8080"]
+        labels:
+          application: "pagos-svc"
+          environment: "production-simulated"
+          service: "microservicio-pagos"

@@ -34,9 +34,9 @@ USER appuser:appgroup
 # Puerto expuesto por el microservicio Spring Boot
 EXPOSE 8080
 
-# Verificación de salud integrada (Healthcheck nativo)
+# Verificación de salud integrada (Healthcheck nativo con Actuator)
 HEALTHCHECK --interval=30s --timeout=5s --start-period=25s --retries=3 \
-  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/v3/api-docs || exit 1
+  CMD wget --no-verbose --tries=1 --spider http://localhost:8080/actuator/health || exit 1
 
 # Comando de inicio asegurando paso de flags de memoria y soporte de señales
 ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]

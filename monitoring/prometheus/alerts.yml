@@ -1,0 +1,42 @@
+groups:
+  - name: pagos-svc-alerts
+    rules:
+      - alert: MicroservicioPagosDown
+        expr: up{job="pagos-svc"} == 0
+        for: 15s
+        labels:
+          severity: critical
+          service: pagos-svc
+        annotations:
+          summary: "Microservicio Pagos fuera de servicio"
+          description: "La instancia {{ $labels.instance }} del microservicio de Pagos no responde a los sondeos de disponibilidad (disponibilidad = 0%)."
+
+      - alert: TasaErroresElevadaHTTP5xx
+        expr: sum(rate(http_server_requests_seconds_count{status=~"5.."}[1m])) / sum(rate(http_server_requests_seconds_count[1m])) > 0.05
+        for: 30s
+        labels:
+          severity: critical
+          service: pagos-svc
+        annotations:
+          summary: "Tasa de errores 5xx superior al 5%"
+          description: "El microservicio está generando fallas internas de servidor por encima del umbral de resiliencia permitido."
+
+      - alert: AltoConsumoMemoriaHeapJVM
+        expr: (jvm_memory_used_bytes{area="heap", id="G1 Eden Space"} / jvm_memory_max_bytes{area="heap", id="G1 Eden Space"}) > 0.85
+        for: 1m
+        labels:
+          severity: warning
+          service: pagos-svc
+        annotations:
+          summary: "Memoria Heap JVM superior al 85%"
+          description: "El consumo de memoria heap en {{ $labels.instance }} supera el 85%, riesgo inminente de OutOfMemory (OOMKilled)."
+
+      - alert: LatenciaRespuestaDegradadaP95
+        expr: http_server_requests_seconds{quantile="0.95"} > 1.5
+        for: 1m
+        labels:
+          severity: warning
+          service: pagos-svc
+        annotations:
+          summary: "Latencia percentil 95 degradada (> 1.5s)"
+          description: "El 95% de las transacciones de pago está tardando más de 1.5 segundos en responder."
