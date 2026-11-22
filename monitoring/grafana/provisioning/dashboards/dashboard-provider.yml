@@ -1,0 +1,11 @@
+apiVersion: 1
+
+providers:
+  - name: "Pagos Observability Provider"
+    orgId: 1
+    folder: "Microservicios"
+    type: file
+    disableDeletion: false
+    editable: true
+    options:
+      path: /var/lib/grafana/dashboards

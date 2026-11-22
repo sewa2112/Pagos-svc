@@ -23,13 +23,58 @@ services:
           cpus: "0.25"
           memory: 256M
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/v3/api-docs"]
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
       interval: 15s
       timeout: 5s
       retries: 3
       start_period: 25s
     networks:
       - pagos-net
+
+  pushgateway:
+    image: prom/pushgateway:v1.9.0
+    container_name: caso06-pagos-pushgateway
+    restart: unless-stopped
+    ports:
+      - "9091:9091"
+    networks:
+      - pagos-net
+
+  prometheus:
+    image: prom/prometheus:v2.54.1
+    container_name: caso06-pagos-prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./monitoring/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - ./monitoring/prometheus/alerts.yml:/etc/prometheus/alerts.yml:ro
+    command:
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.retention.time=7d"
+    networks:
+      - pagos-net
+    depends_on:
+      - pagos-svc
+      - pushgateway
+
+  grafana:
+    image: grafana/grafana:11.2.0
+    container_name: caso06-pagos-grafana
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      - GF_SECURITY_ADMIN_USER=admin
+      - GF_SECURITY_ADMIN_PASSWORD=admin
+      - GF_USERS_ALLOW_SIGN_UP=false
+    volumes:
+      - ./monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ./monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+    networks:
+      - pagos-net
+    depends_on:
+      - prometheus
 
 networks:
   pagos-net:
