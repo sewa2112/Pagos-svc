@@ -15,3 +15,12 @@ scrape_configs:
           application: "pagos-svc"
           environment: "production-simulated"
           service: "microservicio-pagos"
+
+  - job_name: "pushgateway"
+    scrape_interval: 5s
+    honor_labels: true
+    static_configs:
+      - targets: ["pushgateway:9091"]
+        labels:
+          application: "pagos-cicd"
+          service: "pushgateway-metrics"

@@ -31,6 +31,15 @@ services:
     networks:
       - pagos-net
 
+  pushgateway:
+    image: prom/pushgateway:v1.9.0
+    container_name: caso06-pagos-pushgateway
+    restart: unless-stopped
+    ports:
+      - "9091:9091"
+    networks:
+      - pagos-net
+
   prometheus:
     image: prom/prometheus:v2.54.1
     container_name: caso06-pagos-prometheus
@@ -47,6 +56,7 @@ services:
       - pagos-net
     depends_on:
       - pagos-svc
+      - pushgateway
 
   grafana:
     image: grafana/grafana:11.2.0

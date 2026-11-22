@@ -9,4 +9,5 @@ resources:
   - deployment.yaml
   - service.yaml
   - hpa.yaml
-
+  - prometheus.yaml
+  - grafana.yaml

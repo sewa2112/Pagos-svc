@@ -10,7 +10,7 @@ Microservicio correspondiente al **caso caso06 — ViajaMejor** (Reservas de via
 | **Observabilidad (IE1)** | Spring Boot Actuator · Micrometer Prometheus · Servidor Prometheus v2.54.1 · Grafana v11.2.0 |
 | **Orquestación Cloud (IE2)** | Kubernetes Manifests declarativos con Kustomize · Service y Pod Scrape Annotations · Probes Actuator |
 | **Tableros / Dashboards (IE3)** | Dashboard interactivo en Grafana (`pagos-metrics-dashboard.json`) · Matriz en GitHub Step Summary |
-| **Cumplimiento y Auditoría (IE5)** | Script automatizado de auditoría (`scripts/compliance-audit.sh`) · SonarQube · Branch Protection Rules |
+| **Cumplimiento y Auditoría (IE5)** | Script automatizado de auditoría (`audit/compliance-audit.sh`) · SonarQube · Branch Protection Rules |
 | **Toma de Decisiones (IE4)** | Matriz técnica de escalabilidad elástica (HPA), alertas de resiliencia y prevención de fallas |
 | **Mecanismo de Bloqueo (IE6)** | Quality Gates automatizados con fail-fast ante fallas de cobertura (100%), auditoría o despliegue |
 | **CI/CD Pipeline** | GitHub Actions (`.github/workflows/ci-cd.yml`) con 4 etapas integradas de validación y despliegue |
@@ -79,7 +79,7 @@ flowchart LR
 - **Artefactos:** Publicación persistente de reportes Surefire y JaCoCo HTML.
 
 ### 2. Etapa de Cumplimiento Normativo y Seguridad (`compliance-and-security`) — IE5 & IE6
-- **Auditoría Automatizada (`scripts/compliance-audit.sh`):** Ejecuta 12 reglas que auditan el cumplimiento de normativas CIS Docker Benchmark, NIST SP 800-190 y OWASP (usuario no-root, sondeos de salud, límites de CPU/RAM, PodSecurityContext, ausencia de secretos en código).
+- **Auditoría Automatizada (`audit/compliance-audit.sh`):** Ejecuta 12 reglas que auditan el cumplimiento de normativas CIS Docker Benchmark, NIST SP 800-190 y OWASP (usuario no-root, sondeos de salud, límites de CPU/RAM, PodSecurityContext, ausencia de secretos en código).
 - **Quality Gate Bloqueante (IE6):** Si el script de auditoría detecta violaciones críticas, finaliza con código de error 1 y detiene el pipeline protegiendo el entorno productivo.
 - **Análisis Estático y Dependencias:** Configuración `sonar-project.properties` para SonarQube, escaneo Snyk/Trivy y monitoreo continuo con Dependabot.
 
@@ -126,17 +126,32 @@ Acceso a las herramientas:
 
 La integración de observabilidad en el ciclo de vida del software permite adoptar decisiones automatizadas y operacionales fundamentadas:
 
-1. **Autoescalado Horizontal Elástico:** El HPA de Kubernetes escala automáticamente de 2 a 5 réplicas cuando el uso de CPU supera el 70% o la memoria excede el 80%.
-2. **Autorecuperación de Instancias Degradadas:** `livenessProbe` reinicia pods inoperativos y `readinessProbe` retira del balanceador instancias que aún no inicializan sus conexiones.
-3. **Rollback y Aborto de Despliegue:** Si durante el despliegue la tasa de errores HTTP 5xx supera el 5% o los Smoke Tests fallan, el pipeline aborta la promoción productiva.
-4. **Prevención de Fugas de Memoria:** Alertas proactivas en Prometheus (`AltoConsumoMemoriaHeapJVM`) advierten cuando el Heap supera el 85%, permitiendo generar volcados diagnósticos antes de que ocurra un fallo general.
+### Matriz de Decisiones Técnicas (Panel -> Decisión -> Acción):
+
+| Panel / Métrica | Condición Observada | Decisión Técnica | Acción Operacional Ejecutada |
+|---|---|---|---|
+| **Tiempo de Despliegue** | Duración > 180 segundos en pipeline CI/CD. | Optimizar empaquetado y cacheo. | Habilitación de caché Maven y capas Docker optimizadas. |
+| **Cobertura de Pruebas** | Cobertura JaCoCo < 100% de líneas. | Bloquear promoción a producción. | Falla de JaCoCo en `pom.xml` detiene el pipeline de inmediato. |
+| **Uso de CPU y Memoria** | CPU > 70% o Memoria Heap > 80%. | Autoescalar réplicas del pod. | HPA en Kubernetes escala pods de 2 hasta 5 réplicas. |
+| **Errores Registrados** | Errores HTTP 5xx > 1% o fallo en Smoke Tests. | Aislar y abortar despliegue. | Despliegue detenido y pod aislado por readinessProbe. |
 
 ---
 
 # Políticas de Cumplimiento y Gobernanza (IE5)
 
-1. **Auditoría Automatizada (`scripts/compliance-audit.sh`):** Ejecutable en CI/CD que valida 12 controles de seguridad y gobernanza.
-2. **Políticas de Branch Protection en GitHub:**
+### Matriz de Verificación Normativa (Política -> Herramienta -> Verificación):
+
+| Política | Herramienta | Verificación |
+|---|---|---|
+| **Seguridad de Contenedores** | `audit/compliance-audit.sh` | Usuario no-root (`appuser`), HEALTHCHECK y base Alpine. |
+| **Orquestación Cloud** | `kubectl kustomize k8s/` | Manifiestos K8s con requests/limits, probes, securityContext y HPA. |
+| **Observabilidad** | Prometheus + Actuator | Anotaciones scrape, endpoints Actuator y reglas de alertas activas. |
+| **Quality Gate Central** | SonarQube / SonarCloud | Calidad estática, cobertura, bugs y hotspots de seguridad. |
+| **Protección de Ramas** | GitHub Branch Protection | Pull Requests obligatorios con aprobación y checks de estado aprobados. |
+| **Protección de Secretos** | Auditoría automatizada | Escaneo regex contra tokens, credenciales y llaves privadas en repo. |
+
+1. **Auditoría Automatizada (`audit/compliance-audit.sh`):** Ejecutable en CI/CD que valida 12 controles de seguridad y gobernanza.
+2. **Políticas de Branch Protection en GitHub (`audit/branch-protection.md`):**
    - Prohibición de commits o pushes directos a `main` y `develop`.
    - Pull Requests obligatorios con aprobación de al menos 1 revisor.
    - Aprobación obligatoria de los status checks de CI/CD (`test-and-coverage`, `compliance-and-security`).

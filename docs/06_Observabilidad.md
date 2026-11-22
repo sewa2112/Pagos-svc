@@ -79,33 +79,35 @@ El tablero de control en Grafana y el Step Summary del pipeline CI/CD visualizan
 
 ## 3. Toma de Decisiones Técnicas Informadas (IE4)
 
-La observabilidad no es únicamente visualización; es el motor que fundamenta las decisiones de arquitectura, escalabilidad y operación:
+La observabilidad no es únicamente visualización; es el motor que fundamenta las decisiones de arquitectura, escalabilidad y operación continua.
 
-### Matriz de Decisiones Técnicas Basadas en Métricas:
+### Matriz de Decisiones Técnicas Basadas en Métricas (Panel -> Decisión -> Acción):
 
-1. **Decisión de Autoescalado Horizontal (HPA en Kubernetes):**
-   - *Condición observada:* La métrica `cpu_utilization` supera el 70% o el consumo de memoria excede el 80% durante más de 60 segundos sostenidos.
-   - *Decisión técnica:* El Horizontal Pod Autoscaler escala el número de réplicas de 2 hasta 5 pods automáticamente para distribuir la carga sin intervención manual.
-
-2. **Decisión de Aislamiento y Autorecuperación de Pods (Self-Healing):**
-   - *Condición observada:* La métrica `up{job="pagos-svc"}` pasa a 0 o el `livenessProbe` falla 3 veces consecutivas.
-   - *Decisión técnica:* Kubernetes reinicia el pod defectuoso. Si el `readinessProbe` no responde, el balanceador de carga del Service retira el pod del enrutamiento inmediatamente para no impactar a los usuarios.
-
-3. **Decisión de Optimización y Diagnóstico de Memoria (JVM Profiling):**
-   - *Condición observada:* Crecimiento monotónico de la métrica `jvm_memory_used_bytes{area="heap"}` sin liberación tras ciclos de Garbage Collection (alerta `AltoConsumoMemoriaHeapJVM`).
-   - *Decisión técnica:* El equipo de ingeniería programa un volcado de memoria (*heap dump*) preventivo para diagnosticar posibles fugas de memoria antes de que ocurra una caída del servicio.
-
-4. **Decisión de Aborto y Rollback de Despliegue:**
-   - *Condición observada:* Durante la fase de validación de despliegue, la tasa de errores HTTP 5xx supera el 5% o los Smoke Tests no responden HTTP 200/201.
-   - *Decisión técnica:* El pipeline CI/CD aborta de forma instantánea el despliegue impidiendo que la versión inestable sea promovida a producción.
+| Panel / Métrica | Condición Observada | Decisión Técnica | Acción Operacional Ejecutada |
+|---|---|---|---|
+| **Tiempo de Despliegue** | Duración del pipeline supera los 180 segundos en GitHub Actions. | Optimizar el proceso de empaquetado y cacheo de capas. | Se habilita caché en capas Docker, dependencias Maven pre-descargadas y paralelización de validaciones. |
+| **Cobertura de Pruebas** | Cobertura JaCoCo cae por debajo del 100% de líneas requeridas. | Bloquear la promoción a producción e impedir merges no testeados. | El Quality Gate de JaCoCo en `pom.xml` finaliza con error (fail-fast) y detiene el pipeline en la etapa de test. |
+| **Uso de CPU y Memoria** | Uso sostenido de CPU > 70% o Memoria JVM Heap > 80% durante más de 60 segundos. | Escalar horizontalmente pods del microservicio y recolectar diagnósticos. | El Horizontal Pod Autoscaler (HPA) en Kubernetes incrementa de 2 a hasta 5 réplicas; se programa heap dump si persiste. |
+| **Errores Registrados (HTTP 5xx)** | Tasa de errores HTTP 5xx supera el 1% o fallan los Smoke Tests de despliegue. | Aislar el pod no saludable y realizar rollback automático preventivo. | Kubernetes retira el pod mediante Readiness Probe; el pipeline de CI/CD marca el job como fallido y aborta el despliegue. |
 
 ---
 
 ## 4. Políticas de Cumplimiento, Gobernanza y Auditoría Automatizada (IE5)
 
-Se establecen controles automatizados para garantizar la conformidad con normativas del sector (CIS Docker Benchmark, NIST SP 800-190, OWASP y PCI-DSS para servicios de pagos):
+Se establecen controles automatizados para garantizar la conformidad con normativas del sector (CIS Docker Benchmark, NIST SP 800-190, OWASP y PCI-DSS para servicios de pagos).
 
-### A. Script de Auditoría Automatizada (`scripts/compliance-audit.sh`)
+### Matriz de Gobernanza y Verificación (Política -> Herramienta -> Verificación):
+
+| Política Normativa | Herramienta | Verificación Automatizada |
+|---|---|---|
+| **Seguridad de Contenedores y Mínimo Privilegio** | `audit/compliance-audit.sh` (CIS Benchmark) | Valida que Dockerfile ejecute como usuario no-root (`appuser`), incluya `HEALTHCHECK` nativo y utilice base Alpine multi-stage. |
+| **Orquestación Segura y Resiliencia Cloud** | `kubectl kustomize` + Script de Auditoría | Verifica que los manifiestos K8s definan `requests/limits`, `liveness/readiness probes`, `runAsNonRoot: true`, `drop: [ALL]` y HPA. |
+| **Observabilidad y Monitoreo Obligatorio** | Script de Auditoría + Spring Boot Actuator | Valida la presencia de anotaciones `prometheus.io/scrape` en K8s, dependencias Micrometer y reglas de alertas en Prometheus. |
+| **Calidad de Código y Quality Gate Centralizado** | SonarQube / SonarCloud (`sonar-project.properties`) | Inspecciona bugs, vulnerabilidades, *code smells*, duplicación de código y exige umbrales mínimos antes de liberar la versión. |
+| **Control de Cambios y Trazabilidad en Repositorio** | GitHub Branch Protection Rules (`main`/`develop`) | Exige Pull Requests obligatorios, aprobación de revisores y paso exitoso de checks de estado (pruebas unitarias, auditoría y seguridad). |
+| **Detección Preventiva de Fugas de Secretos** | Script de Auditoría (`audit/compliance-audit.sh`) | Escaneo regex estricto contra tokens, claves RSA privadas y contraseñas expuestas en texto claro antes de compilar. |
+
+### A. Script de Auditoría Automatizada (`audit/compliance-audit.sh`)
 El pipeline ejecuta una suite de verificación de 12 reglas que auditan:
 - **Seguridad en Contenedores:** Usuario sin privilegios root (`appuser:appgroup`), sondeo nativo `HEALTHCHECK` y base ligera Alpine.
 - **Seguridad en Kubernetes:** `runAsNonRoot: true`, revocación de capacidades del kernel (`capabilities.drop: ["ALL"]`), límites y reservas de recursos obligatorios, y HPA configurado.
