@@ -27,7 +27,7 @@ jobs:
         run: echo "start_time=$(date +%s)" >> $GITHUB_OUTPUT
 
       - name: Configurar JDK 21 (Temurin)
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
@@ -89,7 +89,7 @@ jobs:
           ./audit/compliance-audit.sh
 
       - name: Configurar JDK 21 (Temurin) con cache Maven
-        uses: actions/setup-java@v4
+        uses: actions/setup-java@v6
         with:
           java-version: '21'
           distribution: 'temurin'
