@@ -95,8 +95,8 @@ jobs:
           distribution: 'temurin'
           cache: 'maven'
 
-      - name: Pre-cargar dependencias en cache local (~/.m2)
-        run: mvn -B dependency:go-offline
+      - name: Verificar cache local de dependencias Maven (~/.m2)
+        run: mvn -B dependency:resolve -o || mvn -B dependency:resolve
 
       # Escaneo de dependencias Maven con Snyk (si existe el token configurado)
       - name: Analisis de dependencias Maven con Snyk (Quality Gate)
