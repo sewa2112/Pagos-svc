@@ -227,7 +227,7 @@
       "type": "gauge",
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
       "targets": [
-        { "expr": "vector(100)", "refId": "A", "instant": true }
+        { "expr": "(cicd_jacoco_line_coverage_ratio{job=\"pushgateway\"} * 100) or vector(100)", "refId": "A", "instant": true }
       ]
     },
     {
@@ -256,7 +256,7 @@
       "type": "stat",
       "datasource": { "type": "prometheus", "uid": "Prometheus" },
       "targets": [
-        { "expr": "vector(45)", "refId": "A", "instant": true }
+        { "expr": "cicd_deployment_duration_seconds{job=\"pushgateway\"} or vector(45)", "refId": "A", "instant": true }
       ]
     },
     {
